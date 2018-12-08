@@ -99,14 +99,13 @@ table(Newmanclust$membership, V(docnet2)$nodeCity)
 
 ```
 
-*The modularity of this data is `r Newmanclust$modularity`, which means this clustering get a pretty well classification( by the large modularity). Modularity is the value to identify which clustering algorithm fits best, its range is [-1,1].  
+*The modularity of this data is `r Newmanclust$modularity`, which means this clustering get a pretty well classification( by the large modularity). Modularity is the value to identify which clustering algorithm fits best, its range is [-1,1]. Usually, if mudularity is larger than 0.3, it means the community detection could indicate significant community structure. (the range of modularity is from: https://en.wikipedia.org/wiki/Modularity_(networks))
 
 *In the confusion matrix we can see the Newmans of only get 4 misclassification points, those points may be the connection point for the city they suppose to cluseterd and the components of it been claddified. The largest city (1:Peoria) have been separated to two community, we will keep our eyes on the following problems from this saparate.
 
 
 >Compare the communities you find to the nodeCity vertex attribute, using a confusion matrix (or any appropriate table). Plot the network, illustrating the results of your community detection with vertex colours. What do you notice?
 
-#?????????????????????, ?????????
 
 ```{r}
 library(igraph)
@@ -115,26 +114,11 @@ library(RColorBrewer)
 membership<-V(docnet2)$nodeCity
 mem.col<-rainbow(length(unique(membership)),alpha=0.3)
 V(docnet2)$color<-mem.col[membership]
-plot(docnet2,edge.width=E(docnet2)$type,vertex.color=V(docnet2)$color,edge.arrow.size=0.2)
-
-plot(UKfaculty, edge.width=Ewidth, edge.color=Ecols,vertex.size=0.3, vertex.label.color=vcols)
-plot(Newmanclust, docnet2)#it is really hard to get it look nicer!only this no warning
-plot(Newmanclust, docnet2, layout=layout_with_graphopt, vertex.color=V(docnet2)$color,vertex.size=1,edge.arrow.size=0.2, vertex.label=V(docnet2)$name)
-```
-####$#$%&^*()
-
-```{r}
-NN=length(unique(E(docnet2)$type))# edge weights range from 1 to 16
-myblues = colorRampPalette(brewer.pal(9,"Blues"))(NN)
-
-# gets NN colours from the blue palette. brewer.pal makes 9 colours in this example;
-# then the colorRampPalette function interpolates these to get more.
-# this is how you can map a  variable to colour. ggplot does all this for us! 
-
-Ecols=myblues[E(docnet2)$type]
-plot(docnet2, edge.width=E(docnet2)$type, edge.color=Ecols,vertex.size=0.3, edge.arrow.size=0.2,vertex.label.color=vcols)
+plot( Newmanclust,as.undirected(docnet2),vertex.color=V(docnet2)$color,edge.width=E(docnet2)/1000000000,Vertex.frame.color = NA)
 ```
 
+* I did not remove the vertex label because when this plot is large enough we can see which points are the connection between different communities. 
+* Also, the weakness of Newman eigenvector method is, it is looks messily by the algorithm separated a city to two different communities.
 
 >Compare and contrast communities found by the eigenvector method, those found with walktrap, and the nodeCity attribute.
 
@@ -143,16 +127,17 @@ plot(docnet2, edge.width=E(docnet2)$type, edge.color=Ecols,vertex.size=0.3, edge
 walkcluster = cluster_walktrap(docnet2)
 table(walkcluster$membership, V(docnet2)$nodeCity) 
 
+plot( walkcluster,as.undirected(docnet2),vertex.color=V(docnet2)$color,edge.width=E(docnet2)/1000000000,Vertex.frame.color = NA)
 ```
 
-*The modularity of this data is `r walkcluster$modularity`, this clustering get a pretty well classificationas well. Walktrap give 7 community, for now we cannot say it is concededly that the Newmans eigenvector's method must better than Walktrap, but the truth shows that the Newmans method will take less space and time because it classified to 5 community.
+*The modularity of this data is `r walkcluster$modularity`, this clustering get a pretty well classificationas well.Also, the benefit of walkcluster is there are not classification problem like Newman's eigenvector algorithm. 
+*For now, eventhough walkcluster separate more community, but it could show the good boundary by different community.
 
-#???????????????
 
 #Q3
 
 >We discussed a number of different centrality measures in class. Use these, or some of these, to identify the best set of vertices which, when removed, will disrupt the network.
-#?????????????????????
+
 
 
 ```{r}
@@ -178,44 +163,20 @@ largedegvertice
 >I have written a program to simulate the spread of information on a network in igraph format. Since the spread of information can be modelled as the spread of an "infection" from which you don't recover (once you have the information you don't forget it!), we use the language "infected" to describe nodes that have seen the information.
 
 ```{r}
+
 simEpi(docnet2)
 ```
 
 >My functions are provided in the doctornet.Rdata file along with the network. The function simEpi has 4 arguments: the graph (in igraph format), the initially infected nodes, the probability that an edge transmits the information (per unit time) and the maximum time of the simulation.
 
-```{r}
-
-```
-
 >simEpi returns a list with items: results, numInfections and timeToInfection. The results item is a "tibble" (which works very much like a data frame), giving the time, whether each node was infected at that time, and the node's ID. The numInfections entry is a data frame with time and the number of nodes infected at that time. The timeToInfection entry is a tibble with the node id, the time that node was infected and its degree. You will, by this point in the project, also have the computed other quantities about the nodes.
-
-```{r}
-
-```
 
 >Here is a quick demonstration of how to use simEpi. NOTE that if you have loaded the MASS package you will need to detach it with detach("packages:MASS").
 
-```{r}
-
-```
-
 >And here is a demonstration of how to use my plotting function in combination with the results of simEpi. The first input is the graph. The second input is the results of simEpi. the final input is a list of a few times for which you would like to make the plot. This function plots the graph, colouring vertices according to whether they are "infected" (with the information).
-
-```{r}
-
-```
-
 >If you would like to see the function, just type its name without the brackets, eg simEpi or plotInfTimeGraph.
 
-```{r}
-
-```
-
->Explore which kinds of nodes tend to get exposed to the new information earlier, and which kinds of nodes get exposed later. You can use your answers to Q3 to decide what you mean by kinds of nodes. (Clearly, the nodes you set as initially infected are infected first; this is a trivial observation and is not the answer to the question).
-
-```{r}
-
-```
+>Explore which kinds of nodes tend to get exposed to the new information earlier, and which kinds of nodes get exposed later. You can use your answers to Q3 to decide what you mean by kinds of nodes. (Clearly, the nodes you set as initially infected are infected first; this is a trivial observation and is not the answer to the question).`
 
 >Discuss your results.
 
