@@ -1,0 +1,246 @@
+---
+title: "math495"
+author: "LeiChen"
+date: "December 4, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+load("doctornet.Rdata")
+require(igraph)
+library(tidyverse)
+library(magrittr)
+library(dplyr)
+library(RColorBrewer)
+```
+
+```{r}
+par(oma = c(5,4,0,0) + 0.1, mar = c(0,0,1,1) + 0.1) # margin settings
+plot(docnet2,vertex.size=0.3,edge.arrow.size=0.1, vertex.color="blue", vertex.frame.color=NA,xlim=c(-1,1),ylim=c(-1,1))
+```
+
+* The simple network visualization of dataset: docnet2.(plot 1.1)
+
+#Q1
+
+> Compute some basic statistics about this graph. How many vertices and edges does it have? What is the mean degree? Show a histogram of the degree 
+
+
+######????Based on the data description (http://moreno.ss.uci.edu/data.html#ckm), firstly removed some outcomes with "no answer"
+
+#####do simply analysis to analyze first, and then do some back analyzation
+
+##????????????????????????????????????????????? ????????????????????????????????????
+#####please add name of those outcomes
+
+```{r}
+summary(docnet2)
+pie(table(V(docnet2)$nodeCity),main="outcome distribution of nodeCity")
+
+pie(table(V(docnet2)$nodeAdoptionDate),main="outcome distribution of adoption date")
+pie(table(V(docnet2)$nodeMed_sch_yr),main="outcome distribution of started in the profession")
+pie(table(V(docnet2)$nodeMeetings),main="outcome distribution of attend meeting in last 12 months")
+pie(table(V(docnet2)$nodeJours ),main="outcome distribution of Journal receive regularly")
+pie(table(V(docnet2)$nodeFreeTime),main="outcome distribution of person spend to free time--doctors or non-doctors")
+pie(table(V(docnet2)$nodeDiscuss),main="outcome distribution of discussions with other doctors")
+pie(table(V(docnet2)$nodeClubs),main="outcome distribution of club composed mostly of doctors ")
+pie(table(V(docnet2)$nodeFriends),main="outcome distribution of friends in society")
+pie(table(V(docnet2)$nodeCommunity),main="outcome distribution of practicing in the community")
+pie(table(V(docnet2)$nodePatients),main="outcome distribution of how many patients visits")
+pie(table(V(docnet2)$nodeProximity),main="outcome distribution of sharing office with other physicans")
+pie(table(V(docnet2)$nodeSpecialty),main="outcome distribution of specialize medicine")
+pie(table(E(docnet2)$type),main="outcome distribution of connection type")
+
+```
+
+
+```{r}
+Edgenum = length(E(docnet2)$type)
+typez = unique(E(docnet2)$type)
+docname = length(unique(V(docnet2)$name))
+hist(degree(docnet2),main=' distribution of degrees for each vertices')
+
+meandeg = mean(degree(docnet2))
+mediandeg = median(degree(docnet2))
+largedegvertice = V(docnet2)[degree(docnet2)>=30]
+
+smalldegvertice = V(docnet2)[degree(docnet2)<=5]
+
+```
+
+*There are`r docname` different doctors and `r Edgenum` edges consist of 4 difference types (`r typez`) connection between different edges. The following histogram shows the degree. The average degree of the data is `r meandeg` and the median degree of the data is `r mediandeg`.
+
+*By the histogram we can see most of vertices have a degree less than 30. I highlight those vertices which have degree larger than 30 is because it may helpful for different comparision for algorithms of components clustering in following questions.
+There are `r length(largedegvertice)` vertices have a degree larger than 30, they are: `r largedegvertice`.
+
+*also, there are `r length(smalldegvertice)` vertices have a degree less than 5, they are: `r smalldegvertice`.
+
+#Q2
+
+```{r}
+components(docnet2)
+```
+
+*this outputs shows that, every vertice in this dataset should connect at least one another vertice. By this information we can see that the components way is not very suitable to this data. Based on the basic visualization of docnet2, plot 1.1, the plot should have more components.
+
+
+> Perform community detection in this graph using Newman's eigenvector method. You should consider the graph to be undirected (use as.undirected).
+
+```{r}
+library(igraph)
+Newmanclust= cluster_leading_eigen(graph=as.undirected(docnet2), steps = -1, weights = NULL, start = NULL, options = arpack_defaults, callback = NULL, extra = NULL, env = parent.frame())
+
+table(Newmanclust$membership, V(docnet2)$nodeCity) 
+
+```
+
+*The modularity of this data is `r Newmanclust$modularity`, which means this clustering get a pretty well classification( by the large modularity). Modularity is the value to identify which clustering algorithm fits best, its range is [-1,1].  
+
+*In the confusion matrix we can see the Newmans of only get 4 misclassification points, those points may be the connection point for the city they suppose to cluseterd and the components of it been claddified. The largest city (1:Peoria) have been separated to two community, we will keep our eyes on the following problems from this saparate.
+
+
+>Compare the communities you find to the nodeCity vertex attribute, using a confusion matrix (or any appropriate table). Plot the network, illustrating the results of your community detection with vertex colours. What do you notice?
+
+#?????????????????????, ?????????
+
+```{r}
+library(igraph)
+library(RColorBrewer)
+
+membership<-V(docnet2)$nodeCity
+mem.col<-rainbow(length(unique(membership)),alpha=0.3)
+V(docnet2)$color<-mem.col[membership]
+plot(docnet2,edge.width=E(docnet2)$type,vertex.color=V(docnet2)$color,edge.arrow.size=0.2)
+
+plot(UKfaculty, edge.width=Ewidth, edge.color=Ecols,vertex.size=0.3, vertex.label.color=vcols)
+plot(Newmanclust, docnet2)#it is really hard to get it look nicer!only this no warning
+plot(Newmanclust, docnet2, layout=layout_with_graphopt, vertex.color=V(docnet2)$color,vertex.size=1,edge.arrow.size=0.2, vertex.label=V(docnet2)$name)
+```
+####$#$%&^*()
+
+```{r}
+NN=length(unique(E(docnet2)$type))# edge weights range from 1 to 16
+myblues = colorRampPalette(brewer.pal(9,"Blues"))(NN)
+
+# gets NN colours from the blue palette. brewer.pal makes 9 colours in this example;
+# then the colorRampPalette function interpolates these to get more.
+# this is how you can map a  variable to colour. ggplot does all this for us! 
+
+Ecols=myblues[E(docnet2)$type]
+plot(docnet2, edge.width=E(docnet2)$type, edge.color=Ecols,vertex.size=0.3, edge.arrow.size=0.2,vertex.label.color=vcols)
+```
+
+
+>Compare and contrast communities found by the eigenvector method, those found with walktrap, and the nodeCity attribute.
+
+```{r}
+
+walkcluster = cluster_walktrap(docnet2)
+table(walkcluster$membership, V(docnet2)$nodeCity) 
+
+```
+
+*The modularity of this data is `r walkcluster$modularity`, this clustering get a pretty well classificationas well. Walktrap give 7 community, for now we cannot say it is concededly that the Newmans eigenvector's method must better than Walktrap, but the truth shows that the Newmans method will take less space and time because it classified to 5 community.
+
+#???????????????
+
+#Q3
+
+>We discussed a number of different centrality measures in class. Use these, or some of these, to identify the best set of vertices which, when removed, will disrupt the network.
+#?????????????????????
+
+
+```{r}
+largedegvertice
+
+#this is a scle free graph because this graph is BLABLABLA the benefit of this graph is , and it is sutiable for blablabla
+```
+
+>Test your results: remove some vertices and test to what extent they disconnect the network.
+
+```{r}
+
+```
+
+>Illustrate your results with one or more plots.
+
+```{r}
+
+```
+
+#Q4
+
+>I have written a program to simulate the spread of information on a network in igraph format. Since the spread of information can be modelled as the spread of an "infection" from which you don't recover (once you have the information you don't forget it!), we use the language "infected" to describe nodes that have seen the information.
+
+```{r}
+simEpi(docnet2)
+```
+
+>My functions are provided in the doctornet.Rdata file along with the network. The function simEpi has 4 arguments: the graph (in igraph format), the initially infected nodes, the probability that an edge transmits the information (per unit time) and the maximum time of the simulation.
+
+```{r}
+
+```
+
+>simEpi returns a list with items: results, numInfections and timeToInfection. The results item is a "tibble" (which works very much like a data frame), giving the time, whether each node was infected at that time, and the node's ID. The numInfections entry is a data frame with time and the number of nodes infected at that time. The timeToInfection entry is a tibble with the node id, the time that node was infected and its degree. You will, by this point in the project, also have the computed other quantities about the nodes.
+
+```{r}
+
+```
+
+>Here is a quick demonstration of how to use simEpi. NOTE that if you have loaded the MASS package you will need to detach it with detach("packages:MASS").
+
+```{r}
+
+```
+
+>And here is a demonstration of how to use my plotting function in combination with the results of simEpi. The first input is the graph. The second input is the results of simEpi. the final input is a list of a few times for which you would like to make the plot. This function plots the graph, colouring vertices according to whether they are "infected" (with the information).
+
+```{r}
+
+```
+
+>If you would like to see the function, just type its name without the brackets, eg simEpi or plotInfTimeGraph.
+
+```{r}
+
+```
+
+>Explore which kinds of nodes tend to get exposed to the new information earlier, and which kinds of nodes get exposed later. You can use your answers to Q3 to decide what you mean by kinds of nodes. (Clearly, the nodes you set as initially infected are infected first; this is a trivial observation and is not the answer to the question).
+
+```{r}
+
+```
+
+>Discuss your results.
+
+```{r}
+
+```
+
+#Q5
+
+>Use the network to improve our understanding of why some doctors prescribed the drug early and others did not (if this is possible!). The vertex attribute nodeAdoptionDate has units of months, with 98 or 99 given to doctors who did not prescribe the drug at all.
+
+```{r}
+
+```
+
+
+>You may wish to refer to the dataset descriptions (linked above). You can combine ideas from Q3 and Q4, use your own ideas, and you can use the tools from Part 1 of the course.
+
+```{r}
+
+```
+
+>You may wish to read what I think is the first paper on this dataset (in any case it is an early paper about it!): Coleman, J.S., Katz, E. and Menzel, H. (1957), The diffusion of an innovation among physicians. However, do not simply imitate their analysis; add your own, modern, perspective, calculations and plots.
+
+```{r}
+
+```
+
