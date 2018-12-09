@@ -31,28 +31,6 @@ plot(docnet2,vertex.size=0.3,edge.arrow.size=0.1, vertex.color="blue", vertex.fr
 > Compute some basic statistics about this graph. How many vertices and edges does it have? What is the mean degree? Show a histogram of the degree 
 
 
-
-```{r}
-summary(docnet2)
-pie(table(V(docnet2)$nodeCity),main="outcome distribution of nodeCity")
-
-pie(table(V(docnet2)$nodeAdoptionDate),main="outcome distribution of adoption date")
-pie(table(V(docnet2)$nodeMed_sch_yr),main="outcome distribution of started in the profession")
-pie(table(V(docnet2)$nodeMeetings),main="outcome distribution of attend meeting in last 12 months")
-pie(table(V(docnet2)$nodeJours ),main="outcome distribution of Journal receive regularly")
-pie(table(V(docnet2)$nodeFreeTime),main="outcome distribution of person spend to free time--doctors or non-doctors")
-pie(table(V(docnet2)$nodeDiscuss),main="outcome distribution of discussions with other doctors")
-pie(table(V(docnet2)$nodeClubs),main="outcome distribution of club composed mostly of doctors ")
-pie(table(V(docnet2)$nodeFriends),main="outcome distribution of friends in society")
-pie(table(V(docnet2)$nodeCommunity),main="outcome distribution of practicing in the community")
-pie(table(V(docnet2)$nodePatients),main="outcome distribution of how many patients visits")
-pie(table(V(docnet2)$nodeProximity),main="outcome distribution of sharing office with other physicans")
-pie(table(V(docnet2)$nodeSpecialty),main="outcome distribution of specialize medicine")
-pie(table(E(docnet2)$type),main="outcome distribution of connection type")
-
-```
-
-
 ```{r}
 Edgenum = length(E(docnet2)$type)
 typez = unique(E(docnet2)$type)
@@ -61,7 +39,7 @@ hist(degree(docnet2),main=' distribution of degrees for each vertices')
 
 meandeg = mean(degree(docnet2))
 mediandeg = median(degree(docnet2))
-largedegvertice = V(docnet2)[degree(docnet2)>=30]
+largedegvertice =tail(sort(degree(docnet2)),5)
 
 smalldegvertice = V(docnet2)[degree(docnet2)<=5]
 
@@ -72,7 +50,7 @@ smalldegvertice = V(docnet2)[degree(docnet2)<=5]
 *There are`r docname` different doctors and `r Edgenum` edges consist of 4 difference types (`r typez`) connection between different edges. The following histogram shows the degree. The average degree of the data is `r meandeg` and the median degree of the data is `r mediandeg`.
 
 *By the histogram we can see most of vertices have a degree less than 30. I highlight those vertices which have degree larger than 30 is because it may helpful for different comparision for algorithms of components clustering in following questions.
-There are `r length(largedegvertice)` vertices have a degree larger than 30, they are: `r largedegvertice`.
+The top5 nodes of largest degree are: `r largedegvertice`.
 
 *also, there are `r length(smalldegvertice)` vertices have a degree less than 5, they are: `r smalldegvertice`.
 
@@ -129,14 +107,15 @@ plot( Newmanclust,as.undirected(docnet2),vertex.color=V(docnet2)$color,edge.widt
 >Compare and contrast communities found by the eigenvector method, those found with walktrap, and the nodeCity attribute.
 
 ```{r}
-
+library(igraph)
 walkcluster = cluster_walktrap(docnet2)
 table(walkcluster$membership, V(docnet2)$nodeCity) 
 
 plot( walkcluster,as.undirected(docnet2),vertex.color=V(docnet2)$color,edge.width=E(docnet2)/1000000000,Vertex.frame.color = NA)
+
 ```
 
-*The modularity of this data is `r walkcluster$modularity`, this clustering get a pretty well classificationas well.Also, the benefit of walkcluster is there are not classification problem like Newman's eigenvector algorithm. 
+*The modularity of this data is 0.64, this clustering get a pretty well classificationas well.Also, the benefit of walkcluster is there are not classification problem like Newman's eigenvector algorithm. 
 *For now, eventhough walkcluster separate more community, but it could show the good boundary by different community.
 
 
@@ -145,69 +124,106 @@ plot( walkcluster,as.undirected(docnet2),vertex.color=V(docnet2)$color,edge.widt
 >We discussed a number of different centrality measures in class. Use these, or some of these, to identify the best set of vertices which, when removed, will disrupt the network.
 
 >Test your results: remove some vertices and test to what extent they disconnect the network.
+>Illustrate your results with one or more plots.
 
-*There are some different ways to find the "important points", in this project I will compare closeness cerntrality, betweenness centrality, PageRank, and LPA (Label Propagation Algorithm), or just a very high degree vertice as largedegvertice.
+*There are some different ways to find the "important points", in this project I will compare closeness cerntrality, betweenness centrality, PageRank, and high degree vertices set, such as largedegvertice. Each way I removed 5 heaviest nodes to do a obeservation of the graph sensitivity and robustness.
 
-*largedegvertice
+*largedegvertice: it just the group of vertices that have largest degree. There are 5 vertices have larger or equal than 30 degree in this network.
 
 ```{r}
 largedegvertice
 g<- docnet2 - V(docnet2)[largedegvertice]
-Newmang= cluster_leading_eigen(graph=as.undirected(g), steps = -1, weights = NULL, start = NULL, options = arpack_defaults, callback = NULL, extra = NULL, env = parent.frame())
+summary(g)#had removed 86 edges and 5 vertices
+(Newmang= cluster_leading_eigen(graph=as.undirected(g), steps = -1, weights = NULL, start = NULL, options = arpack_defaults, callback = NULL, extra = NULL, env = parent.frame()))
 
 table(Newmang$membership, V(g)$nodeCity) 
 plot( Newmang,as.undirected(g),vertex.color=V(g)$color,edge.width=E(g)/1000000000,Vertex.frame.color = NA)
 
-Newmang$modularity
 
-walkg = cluster_walktrap(g)
+(walkg = cluster_walktrap(g))
 table(walkg$membership, V(g)$nodeCity) 
-
 plot( walkg,as.undirected(g),vertex.color=V(g)$color,edge.width=E(g)/1000000000,Vertex.frame.color = NA)
 ```
+
+* I do a comparative by Newman eigenvector method and walktrap. Since I removed the large degree nodes, the modularity of newman eigenvector method becomes 0.65, and it is still been spearate 5 groups. The modularity of new graph by walktrap is increased to 0.66, the separate of walktrap is still 7 communities. Since the output and plot of walktrap is not as good (I mean, the plot starts have some overlapping), walktrap seems more sensitive than Newman eigenvector method.
 
 ```{r}
 closene = closeness(docnet2, vids = V(docnet2), mode = c("out", "in", "all", "total"),
   weights = NULL, normalized = FALSE)
 closeneV = tail(sort(closene),5)
-#Since closeness centrality is reciprocal of the average distance for direction to every other points in this network, as the output value larger, the better closeness centrality have for this point.
 
-g1<- docnet2 - V(docnet2)[closeneV]
-Newmang1= cluster_leading_eigen(graph=as.undirected(g1), steps = -1, weights = NULL, start = NULL, options = arpack_defaults, callback = NULL, extra = NULL, env = parent.frame())
+
+g1<- docnet2 - V(docnet2)[c(73,128,71,124,142)]
+summary(g1)#been removed 41 edges by removed 5 vertices
+(Newmang1= cluster_leading_eigen(graph=as.undirected(g1), steps = -1, weights = NULL, start = NULL, options = arpack_defaults, callback = NULL, extra = NULL, env = parent.frame()))
 
 table(Newmang1$membership, V(g1)$nodeCity) 
 plot( Newmang1,as.undirected(g1),vertex.color=V(g1)$color,edge.width=E(g1)/1000000000,Vertex.frame.color = NA)
 
-Newmang1$modularity
-
-walkg1 = cluster_walktrap(g1)
+(walkg1 = cluster_walktrap(g1))
 table(walkg1$membership, V(g1)$nodeCity) 
 
 plot( walkg1,as.undirected(g1),vertex.color=V(g1)$color,edge.width=E(g1)/1000000000,Vertex.frame.color = NA)
 
 
 ```
+*Closeness cerntrality: Since closeness centrality is reciprocal of the average distance for direction to every other points in this network, as the output value larger, the better closeness centrality have for this point.
+* Based on this idea we pick the largest 5 `r closeneV` of the overview.
 
-* 
->Illustrate your results with one or more plots.
+*This time, since I removed top5 closenss cerntrality points, the modularity of newman eigenvector method becomes 0.64, and it is still been spearate 5 groups. The modularity of new graph by walktrap is increased to 0.66, the separate of walktrap becomes 9 communities. I think walktrap will make people confused by separating too much communities, it is a kind of overfitting.
 
 ```{r}
+betweene = betweenness(docnet2)
+betweeneV = tail(sort(betweene),5)
+
+g2<- docnet2 - V(docnet2)[c(79,189,95,30,212)]
+summary(g2)#105 edges been removed
+(Newmang2= cluster_leading_eigen(graph=as.undirected(g2), steps = -1, weights = NULL, start = NULL, options = arpack_defaults, callback = NULL, extra = NULL, env = parent.frame()))
+
+table(Newmang2$membership, V(g2)$nodeCity) 
+plot( Newmang2,as.undirected(g2),vertex.color=V(g2)$color,edge.width=E(g2)/1000000000,Vertex.frame.color = NA)
+
+
+(walkg2 = cluster_walktrap(g2))
+table(walkg2$membership, V(g2)$nodeCity) 
+
+plot( walkg2,as.undirected(g2),vertex.color=V(g2)$color,edge.width=E(g2)/1000000000,Vertex.frame.color = NA)
+```
+
+* Betweeness centrality: the basic idea of betweeness centrality is to find the shortest path for i,and j(all i,j are belong to the graph, i!=j)
+* Based on this idea we pick the largest 5 `r betweeneV` of the overview.
+* Since I removed top5 heavy betweeness centrality nodes, the modularity of newman eigenvector method is 0.64, and it is still been spearate 5 groups. The modularity of new graph by walktrap is still 0.64, the separate of walktrap increased to 10 communities. But since the walktrap give a less overlapping plot than Newman eigenvector algorithm, walktrap seems more powerful and accuracy than newman eigenvector.
+
+```{r}
+pagrank= page.rank(docnet2)
+pagrankV = tail(sort(pagrank$vector),5)
+
+
+g3<- docnet2 - V(docnet2)[c(213,36,212,122,29)]
+summary(g3)#194 edges has been removed by those 5 nodes
+(Newmang3= cluster_leading_eigen(graph=as.undirected(g3), steps = -1, weights = NULL, start = NULL, options = arpack_defaults, callback = NULL, extra = NULL, env = parent.frame()))
+
+table(Newmang3$membership, V(g3)$nodeCity) 
+plot( Newmang3,as.undirected(g3),vertex.color=V(g3)$color,edge.width=E(g3)/1000000000,Vertex.frame.color = NA)
+
+(walkg3 = cluster_walktrap(g3))
+
+table(walkg3$membership, V(g3)$nodeCity) 
+
+plot( walkg3,as.undirected(g3),vertex.color=V(g3)$color,edge.width=E(g3)/1000000000,Vertex.frame.color = NA)
 
 ```
+
+* PageRank (via:http://snap.stanford.edu/mlg2013/slides/gleich.pdf) : The basic idea of page rank is that, if a webpage had been click more times, then this webpage will get heavier weights. Based on this ideas, people found that if a weblink had been connected to many popular links, the weblink would get a heavy weight link as well. 
+* the sum of the rank 1, and I choose top 5 highest rank points: `r pagrankV` 
+* Since I removed top5 heavy weight nodes by PageRank algorithm, the modularity of newman eigenvector method decreased to 0.57, and it is still been spearate 6 groups. Eventhough the modularity of new graph by walktrap is increased to 0.65, walktrap has been separate to 12 communities. 
+
+*So my conclusion of this comparision, I think PageRank would change most of the graph by same points. The limitation of Newman eigenvector method is that it will give a upperbound of the size of communities, based on the size of Newman eigenvector methods' result is always 5 almost same size communities, but if the data is a set of equal size communities, Newman method will be very robustness.
+* The strength of Walktrap is it always have high modularity which means the communities are harder to overlapping by walktrap algorithm. But the weakness of walktrap is it is weak if we remove some high degree or heavy weight nodes. It is more fluently in different graphs.
 
 #Q4
 
 >I have written a program to simulate the spread of information on a network in igraph format. Since the spread of information can be modelled as the spread of an "infection" from which you don't recover (once you have the information you don't forget it!), we use the language "infected" to describe nodes that have seen the information.
-
-```{r}
-
-mytest <- simEpi(docnet2, init_infected = sample(vcount(docnet2),10), inf.prob = 0.5, max.time = 3000)
-
-
-qplot(data = mytest$numInfections, x = t, y = n.infected, geom = "line")
-
-plotInfTimeGraph(docnet2,mytest,c(1,100,500, 1000))
-```
 
 >My functions are provided in the doctornet.Rdata file along with the network. The function simEpi has 4 arguments: the graph (in igraph format), the initially infected nodes, the probability that an edge transmits the information (per unit time) and the maximum time of the simulation.
 
@@ -223,15 +239,37 @@ plotInfTimeGraph(docnet2,mytest,c(1,100,500, 1000))
 >Discuss your results.
 
 ```{r}
-detach("packages:MASS")
-
-simEpi(docnet2,2,0.5,max.time = 10000)
-for(v in largedegvertice){
-  simEpi(docnet2,v,0.5,max.time = 10000)
-}
+mytestlarge<- simEpi(docnet2, init_infected = largedegvertice, inf.prob = 0.5, max.time = 3000)
+mytestcenter<- simEpi(docnet2, init_infected = c(73,128,71,124,142), inf.prob = 0.5, max.time = 3000)
+mytestbetween<- simEpi(docnet2, init_infected = c(79,189,95,30,212), inf.prob = 0.5, max.time = 3000)
+mytestPGRank<- simEpi(docnet2, init_infected = c(213,36,212,122,29), inf.prob = 0.5, max.time = 3000)
 
 
+ggplot(data = mytestlarge$numInfections$n.infected, x = t, y = n.infected, geom = "line")
+d1 <- data.frame(x1=mytestlarge$numInfections$t, y1=mytestlarge$numInfections$n.infected)#, g1=gl(3,10,labels=letters[1:3]))
+d2 <- data.frame(x1=mytestcenter$numInfections$t, y1=mytestcenter$numInfections$n.infected)#, g1=gl(3,10,labels=letters[1:3]))
+
+ggplot() + 
+  geom_line(aes(x1, y1, colour=d1), d1) +  
+  geom_line(aes(x2, y2, colour=d2), d2)
+
+
+qplot(x1, y1, colour=g1, data=d1, geom="line")+geom_line(aes(x2, y2, colour=g2), d2) 
+
+plotInfTimeGraph(docnet2,mytestlarge,c(1,100,500, 1000))
+plotInfTimeGraph(docnet2,mytestcenter,c(1,100,500, 1000))
+plotInfTimeGraph(docnet2,mytestbetween,c(1,100,500, 1000))
+plotInfTimeGraph(docnet2,mytestPGRank,c(1,100,500, 1000))
+
+
+
+plot(mytestcenter$numInfections$t,mytestcenter$numInfections$n.infected,type="l",col="red",ylim = c(0,40000))
+par(new=TRUE)
+plot(mytestlarge$numInfections$t,mytestlarge$numInfections$n.infected,type="l",axes = FALSE,xlab = "", ylab = "")
 ```
+
+* I draw a pie chart and the outcome 98 and 99 are "no prescription found" and "no prescription data obtained". (Actually the description of the reference reading links are messy, there were no outcome 99 in adoption date, but since the data have a very large amount of "99" in variable AdoptionDates, I would just simply mention it is "no prescription data obtained").
+![The screenshots of docnet2 data description](Capture.png)
 
 #Q5
 
