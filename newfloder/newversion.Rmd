@@ -41,7 +41,7 @@ meandeg = mean(degree(docnet2))
 mediandeg = median(degree(docnet2))
 largedegvertice =tail(sort(degree(docnet2)),5)
 
-smalldegvertice = V(docnet2)[degree(docnet2)<=5]
+smalldegvertice = head(sort(degree(docnet2)),5)
 
 ```
 
@@ -52,7 +52,7 @@ smalldegvertice = V(docnet2)[degree(docnet2)<=5]
 *By the histogram we can see most of vertices have a degree less than 30. I highlight those vertices which have degree larger than 30 is because it may helpful for different comparision for algorithms of components clustering in following questions.
 The top5 nodes of largest degree are: `r largedegvertice`.
 
-*also, there are `r length(smalldegvertice)` vertices have a degree less than 5, they are: `r smalldegvertice`.
+*also, there are 5 nodes of smallest degree: `r smalldegvertice`.
 
 ```{r}
 
@@ -61,6 +61,7 @@ mean(degree(docnet2, mode="out"))
 hist(degree(docnet2, mode="in"),main=' distribution of in-degrees for each vertices')
 mean(degree(docnet2, mode="in"))
 ```
+
 * Moreover, I also sepaerate the degrees to out-degree and in-degree, the average of in-degree and out-degree are both around 6.5, as we seen in out-degree histograms it is very balanced distribution of degree, but the gap between the maximium and the minimum for in-degrees are as huge as 40+. Based on this graph we can get a conclusion: there have some vertices have a very large in-degree and that makes them have a large degree in total.
 
 
@@ -80,7 +81,6 @@ library(igraph)
 Newmanclust= cluster_leading_eigen(graph=as.undirected(docnet2), steps = -1, weights = NULL, start = NULL, options = arpack_defaults, callback = NULL, extra = NULL, env = parent.frame())
 
 table(Newmanclust$membership, V(docnet2)$nodeCity) 
-
 ```
 
 *The modularity of this data is `r Newmanclust$modularity`, which means this clustering get a pretty well classification( by the large modularity). Modularity is the value to identify which clustering algorithm fits best, its range is [-1,1]. Usually, if mudularity is larger than 0.3, it means the community detection could indicate significant community structure. (the range of modularity is from: https://en.wikipedia.org/wiki/Modularity_(networks))
@@ -99,6 +99,7 @@ membership<-V(docnet2)$nodeCity
 mem.col<-rainbow(length(unique(membership)),alpha=0.3)
 V(docnet2)$color<-mem.col[membership]
 plot( Newmanclust,as.undirected(docnet2),vertex.color=V(docnet2)$color,edge.width=E(docnet2)/1000000000,Vertex.frame.color = NA)
+legend("topleft",legend= unique(V(docnet2)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 ```
 
 * I did not remove vertex labels because when this plot is large enough we can see which points are the connection between different communities. 
@@ -112,6 +113,7 @@ walkcluster = cluster_walktrap(docnet2)
 table(walkcluster$membership, V(docnet2)$nodeCity) 
 
 plot( walkcluster,as.undirected(docnet2),vertex.color=V(docnet2)$color,edge.width=E(docnet2)/1000000000,Vertex.frame.color = NA)
+legend("topleft",legend= unique(V(docnet2)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 
 ```
 
@@ -139,10 +141,11 @@ summary(g)#had removed 86 edges and 5 vertices
 table(Newmang$membership, V(g)$nodeCity) 
 plot( Newmang,as.undirected(g),vertex.color=V(g)$color,edge.width=E(g)/1000000000,Vertex.frame.color = NA)
 
-
+legend("topleft",legend= unique(V(g)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 (walkg = cluster_walktrap(g))
 table(walkg$membership, V(g)$nodeCity) 
 plot( walkg,as.undirected(g),vertex.color=V(g)$color,edge.width=E(g)/1000000000,Vertex.frame.color = NA)
+legend("topleft",legend= unique(V(docnet2)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 ```
 
 * I do a comparative by Newman eigenvector method and walktrap. Since I removed the large degree nodes, the modularity of newman eigenvector method becomes 0.65, and it is still been spearate 5 groups. The modularity of new graph by walktrap is increased to 0.66, the separate of walktrap is still 7 communities. Since the output and plot of walktrap is not as good (I mean, the plot starts have some overlapping), walktrap seems more sensitive than Newman eigenvector method.
@@ -159,12 +162,13 @@ summary(g1)#been removed 41 edges by removed 5 vertices
 
 table(Newmang1$membership, V(g1)$nodeCity) 
 plot( Newmang1,as.undirected(g1),vertex.color=V(g1)$color,edge.width=E(g1)/1000000000,Vertex.frame.color = NA)
-
+legend("topleft",legend= unique(V(g1)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 (walkg1 = cluster_walktrap(g1))
 table(walkg1$membership, V(g1)$nodeCity) 
 
 plot( walkg1,as.undirected(g1),vertex.color=V(g1)$color,edge.width=E(g1)/1000000000,Vertex.frame.color = NA)
-
+mem.col
+legend("topleft",legend= unique(V(g1)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 
 ```
 *Closeness cerntrality: Since closeness centrality is reciprocal of the average distance for direction to every other points in this network, as the output value larger, the better closeness centrality have for this point.
@@ -182,12 +186,13 @@ summary(g2)#105 edges been removed
 
 table(Newmang2$membership, V(g2)$nodeCity) 
 plot( Newmang2,as.undirected(g2),vertex.color=V(g2)$color,edge.width=E(g2)/1000000000,Vertex.frame.color = NA)
-
+legend("topleft",legend= unique(V(g2)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 
 (walkg2 = cluster_walktrap(g2))
 table(walkg2$membership, V(g2)$nodeCity) 
 
 plot( walkg2,as.undirected(g2),vertex.color=V(g2)$color,edge.width=E(g2)/1000000000,Vertex.frame.color = NA)
+legend("topleft",legend= unique(V(g2)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 ```
 
 * Betweeness centrality: the basic idea of betweeness centrality is to find the shortest path for i,and j(all i,j are belong to the graph, i!=j)
@@ -205,13 +210,13 @@ summary(g3)#194 edges has been removed by those 5 nodes
 
 table(Newmang3$membership, V(g3)$nodeCity) 
 plot( Newmang3,as.undirected(g3),vertex.color=V(g3)$color,edge.width=E(g3)/1000000000,Vertex.frame.color = NA)
-
+legend("topleft",legend= unique(V(g3)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 (walkg3 = cluster_walktrap(g3))
 
 table(walkg3$membership, V(g3)$nodeCity) 
 
 plot( walkg3,as.undirected(g3),vertex.color=V(g3)$color,edge.width=E(g3)/1000000000,Vertex.frame.color = NA)
-
+legend("topleft",legend= unique(V(g3)$nodeCity),col=mem.col, title="dottype", text.font=4, bg='lightblue',pch=20,pt.cex=2,cex=1.5,horiz=F)#the color will looks a lot different because the colored shadow of different community
 ```
 
 * PageRank (via:http://snap.stanford.edu/mlg2013/slides/gleich.pdf) : The basic idea of page rank is that, if a webpage had been click more times, then this webpage will get heavier weights. Based on this ideas, people found that if a weblink had been connected to many popular links, the weblink would get a heavy weight link as well. 
@@ -243,33 +248,36 @@ mytestlarge<- simEpi(docnet2, init_infected = largedegvertice, inf.prob = 0.5, m
 mytestcenter<- simEpi(docnet2, init_infected = c(73,128,71,124,142), inf.prob = 0.5, max.time = 3000)
 mytestbetween<- simEpi(docnet2, init_infected = c(79,189,95,30,212), inf.prob = 0.5, max.time = 3000)
 mytestPGRank<- simEpi(docnet2, init_infected = c(213,36,212,122,29), inf.prob = 0.5, max.time = 3000)
+mytestsmall<- simEpi(docnet2, init_infected = smalldegvertice, inf.prob = 0.5, max.time = 3000)
 
 
-ggplot(data = mytestlarge$numInfections$n.infected, x = t, y = n.infected, geom = "line")
-d1 <- data.frame(x1=mytestlarge$numInfections$t, y1=mytestlarge$numInfections$n.infected)#, g1=gl(3,10,labels=letters[1:3]))
-d2 <- data.frame(x1=mytestcenter$numInfections$t, y1=mytestcenter$numInfections$n.infected)#, g1=gl(3,10,labels=letters[1:3]))
-
-ggplot() + 
-  geom_line(aes(x1, y1, colour=d1), d1) +  
-  geom_line(aes(x2, y2, colour=d2), d2)
-
-
-qplot(x1, y1, colour=g1, data=d1, geom="line")+geom_line(aes(x2, y2, colour=g2), d2) 
-
-plotInfTimeGraph(docnet2,mytestlarge,c(1,100,500, 1000))
-plotInfTimeGraph(docnet2,mytestcenter,c(1,100,500, 1000))
-plotInfTimeGraph(docnet2,mytestbetween,c(1,100,500, 1000))
-plotInfTimeGraph(docnet2,mytestPGRank,c(1,100,500, 1000))
-
-
-
-plot(mytestcenter$numInfections$t,mytestcenter$numInfections$n.infected,type="l",col="red",ylim = c(0,40000))
-par(new=TRUE)
-plot(mytestlarge$numInfections$t,mytestlarge$numInfections$n.infected,type="l",axes = FALSE,xlab = "", ylab = "")
 ```
 
-* I draw a pie chart and the outcome 98 and 99 are "no prescription found" and "no prescription data obtained". (Actually the description of the reference reading links are messy, there were no outcome 99 in adoption date, but since the data have a very large amount of "99" in variable AdoptionDates, I would just simply mention it is "no prescription data obtained").
-![The screenshots of docnet2 data description](Capture.png)
+*So I compared the vertices set from "top5" large degree, "top5" imoprtant closeness centrality, "top5" imoprtant betweeness centrality, "top5" imoprtant Page rank high weights dots.
+* I also bring the following line chart to get the speed of, at the same degree and same time, which give the fastest speed of diffusion. Based on the plot we can always seen that the pagerank and betweeness centrality method will find the dots which get the faster speed than other method, also, if a information starts at a small degree of vertices then it may get lower speed of spread at the beginning, but the speed of diffusion will growing while the information send to some powerful and important nodes.
+
+```{r}
+mytestlarge$numInfections$type<- rep("largedeg",3000)
+mytestcenter$numInfections$type<- rep("center",3000)
+mytestbetween$numInfections$type<- rep("between",3000)
+mytestPGRank$numInfections$type<- rep("PGRank",3000)
+mytestsmall$numInfections$type<- rep("smalldeg",3000)
+
+df = as.data.frame(rbind(mytestlarge$numInfections,mytestbetween$numInfections,mytestcenter$numInfections,mytestPGRank$numInfections,mytestsmall$numInfections))
+ ggplot(df, aes(x=t, y=n.infected, group=type, colour=type ) ) + geom_line(size=2)
+```
+
+```{r} 
+plotInfTimeGraph(docnet2,mytestlarge,c(1,100, 1000,3000))#this is the time plot of large degree  
+plotInfTimeGraph(docnet2,mytestcenter,c(1,100,1000,3000))#this is the time plot of closeness centrality 
+plotInfTimeGraph(docnet2,mytestbetween,c(1,100,1000,3000))#this is the time plot of betweeness centrality
+plotInfTimeGraph(docnet2,mytestPGRank,c(1,100,1000,3000))#this is the time plot of Page Rank method
+plotInfTimeGraph(docnet2,mytestsmall,c(1,100,1000,3000))#this is the time plot of smallest degree of vertices
+
+```
+
+*Since the PlotInfTimeGraph() cannot been add the title, I will add the annotation by description. Both of them are followed :top left:mytimes=1, top right:mytimes=100, bottom left: mytimes=1000, bottom right: mytimes=3000.
+* Those plots are showing at that time, how the network looks like in diffusion.
 
 #Q5
 
@@ -278,3 +286,30 @@ plot(mytestlarge$numInfections$t,mytestlarge$numInfections$n.infected,type="l",a
 >You may wish to refer to the dataset descriptions (linked above). You can combine ideas from Q3 and Q4, use your own ideas, and you can use the tools from Part 1 of the course.
 
 >You may wish to read what I think is the first paper on this dataset (in any case it is an early paper about it!): Coleman, J.S., Katz, E. and Menzel, H. (1957), The diffusion of an innovation among physicians. However, do not simply imitate their analysis; add your own, modern, perspective, calculations and plots.
+
+* I draw a pie chart and the outcome 98 and 99 are "no prescription found" and "no prescription data obtained". (Actually the description of the reference reading links are messy, there were no outcome 99 in adoption date, but since the data have a very large amount of "99" in variable AdoptionDates, I would just simply mention it is "no prescription data obtained").
+![The screenshots of docnet2 data description](Capture.png)
+
+(this plot is in the directory of my computer I just want to give the description of variable : AdoptionDate)
+
+```{r}
+
+pie(table(V(docnet2)$nodeAdoptionDate),main="outcome distribution of adoption date")
+```
+
+
+
+
+```{r}
+#Real doctors data get the earliest medicine
+real = V(docnet2)[V(docnet2)$nodeAdoptionDate==1]
+mytestreal<- simEpi(docnet2, init_infected = real, inf.prob = 0.5, max.time = 3000)
+mytestreal$numInfections$type<- rep("realdoctors",3000)
+plotInfTimeGraph(docnet2,mytestreal,c(1,100,1000,3000))
+
+dfa = as.data.frame(rbind(mytestreal$numInfections,mytestPGRank$numInfections,mytestsmall$numInfections))
+ ggplot(dfa, aes(x=t, y=n.infected, group=type, colour=type ) ) + geom_line(size=2)
+```
+
+* This time, by the adoption date I pick 11 doctors who AdoptionDate==1, which means the adoption date of them is November 1953, the earliest time. I draw the compariative plot for the trend of diffusion of real estimates with PageRank method and small degree. Because I think eventhough the real doctors begin for 11 vertices and two other starts at 5 nodes,those two methods outcomes still could give some reference for comparative.
+* By this plot we can see that the real doctors infectation is diffused very slow.
